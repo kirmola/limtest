@@ -18,5 +18,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: limtest # e.g. 'my-project'
-          directory: file2 # e.g. 'dist'
+          directory: 
+             file1
+             file2
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
