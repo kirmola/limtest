@@ -5,7 +5,7 @@ jobs:
     permissions:
       contents: read
       deployments: write
-    name: Deploy to Cloudflare Pages
+    name: Deploy to Cloudflare Pages- f1
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -25,7 +25,9 @@ jobs:
     permissions:
       contents: read
       deployments: write
-    name: Deploy to Cloudflare Pages
+    name: Deploy to Cloudflare Pages- f2
+    needs: deploy-f1
+    if: success('deploy-f1')
     steps:
       - name: Checkout
         uses: actions/checkout@v3
