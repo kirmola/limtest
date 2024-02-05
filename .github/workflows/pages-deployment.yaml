@@ -1,0 +1,44 @@
+on: [push]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    name: Deploy to Cloudflare Pages
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Run your project's build step if needed
+      # - name: Build
+      #   run: npm install && npm run build
+
+      # Automate the flow of moving and creating directories
+      - name: Divide Assets
+        run: |
+          total_files=$(ls -1 | wc -l)
+          files_per_directory=19999
+          total_directories=$((total_files / files_per_directory + 1))
+
+          for ((i = 1; i <= total_directories; i++)); do
+            mkdir -p "assets_part$i"
+            ls -1 | head -$files_per_directory | xargs -I {} mv {} "assets_part$i/"
+            ls -1 | tail -n +$((files_per_directory + 1)) | xargs -I {} mv {} "assets_part$((i+1))"
+          done
+
+      # Upload all parts
+      - name: Upload Parts
+        run: |
+          for dir in assets_part*; do
+            if [ -d "$dir" ]; then
+              echo "Uploading assets from $dir to Cloudflare Pages..."
+              # Use cloudflare/pages-action or your upload script here
+            fi
+          done
+        env:
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PROJECT_NAME: YOUR_PROJECT_NAME # e.g., 'my-project'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
