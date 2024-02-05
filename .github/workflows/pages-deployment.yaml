@@ -1,4 +1,6 @@
-on: [push]
+on:
+  [push]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,7 +26,7 @@ jobs:
 
           for ((i = 1; i <= total_directories; i++)); do
             mkdir -p "assets_part$i"
-            files_to_move=$(ls -1 | head -$files_per_directory)
+            files_to_move=$(ls -1 | grep -m $files_per_directory .)
             if [ "$files_to_move" != "" ]; then
               echo "$files_to_move" | xargs -I {} mv {} "assets_part$i/"
             fi
