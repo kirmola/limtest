@@ -1,38 +1,40 @@
 on:
-  [push]
+  push:
+    branches:
+      - main
 
 jobs:
-  deploy:
+  divide_and_upload:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       deployments: write
-    name: Deploy to Cloudflare Pages
+    name: Divide and Upload Assets
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # Run your project's build step if needed
-      # - name: Build
-      #   run: npm install && npm run build
-
-      # Automate the flow of moving and creating directories
-      - name: Divide Assets
+      - name: Divide and Move Assets
         run: |
-          total_files=$(ls -1 | wc -l)
+          total_files=$(ls -1 data | wc -l)
           files_per_directory=19999
-          total_directories=$((total_files / files_per_directory + 1))
+          remaining_files=$total_files
 
-          for ((i = 1; i <= total_directories; i++)); do
-            mkdir -p "assets_part$i"
-            files_to_move=$(ls -1 | grep -m $files_per_directory .)
+          i=1
+          while [ $remaining_files -gt 0 ]; do
+            current_directory="assets_part$i"
+            mkdir -p "$current_directory"
+
+            files_to_move=$(ls -1 data | head -n $files_per_directory)
             if [ "$files_to_move" != "" ]; then
-              echo "$files_to_move" | xargs -I {} mv {} "assets_part$i/"
+              echo "$files_to_move" | xargs -I {} mv "data/{}" "$current_directory/"
             fi
+
+            remaining_files=$((remaining_files - files_per_directory))
+            i=$((i + 1))
           done
 
-      # Upload all parts
       - name: Upload Parts
         run: |
           for dir in assets_part*; do
@@ -44,5 +46,43 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PROJECT_NAME: limtest # e.g., 'my-project'
+          PROJECT_NAME: limtest
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  upload_part1:
+    runs-on: ubuntu-latest
+    needs: divide_and_upload
+    permissions:
+      contents: read
+      deployments: write
+    name: Upload Part 1
+
+    steps:
+      - name: Upload Part 1
+        uses: cloudflare/pages-action@1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: limtest
+          directory: assets_part1
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  upload_part2:
+    runs-on: ubuntu-latest
+    needs: divide_and_upload
+    permissions:
+      contents: read
+      deployments: write
+    name: Upload Part 2
+
+    steps:
+      - name: Upload Part 2
+        uses: cloudflare/pages-action@1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: limtest
+          directory: assets_part2
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+# Add more upload_part jobs for additional parts if needed
