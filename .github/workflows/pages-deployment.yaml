@@ -37,7 +37,7 @@ jobs:
 
       - name: Save directories and assets to workspace
         run: |
-          mv assets_part* $GITHUB_WORKSPACE/
+          cp -r assets_part* $GITHUB_WORKSPACE/
           echo "assets_part*" > $GITHUB_WORKSPACE/directories.txt
         shell: bash
 
@@ -56,7 +56,7 @@ jobs:
       - name: Restore directories and assets from workspace
         run: |
           cat $GITHUB_WORKSPACE/directories.txt | xargs -I {} mkdir -p {}
-          mv assets_part* ./
+          cp -r assets_part* ./
         shell: bash
 
       - name: Upload Part 1
@@ -83,7 +83,7 @@ jobs:
       - name: Restore directories and assets from workspace
         run: |
           cat $GITHUB_WORKSPACE/directories.txt | xargs -I {} mkdir -p {}
-          mv assets_part* ./
+          cp -r assets_part* ./
         shell: bash
 
       - name: Upload Part 2
