@@ -35,19 +35,11 @@ jobs:
             i=$((i + 1))
           done
 
-      - name: Upload Parts
+      - name: Save directories and assets to workspace
         run: |
-          for dir in assets_part*; do
-            if [ -d "$dir" ]; then
-              echo "Uploading assets from $dir to Cloudflare Pages..."
-              # Use cloudflare/pages-action or your upload script here
-            fi
-          done
-        env:
-          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PROJECT_NAME: limtest
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          mv assets_part* $GITHUB_WORKSPACE/
+          echo "assets_part*" > $GITHUB_WORKSPACE/directories.txt
+        shell: bash
 
   upload_part1:
     runs-on: ubuntu-latest
@@ -58,6 +50,15 @@ jobs:
     name: Upload Part 1
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Restore directories and assets from workspace
+        run: |
+          cat $GITHUB_WORKSPACE/directories.txt | xargs -I {} mkdir -p {}
+          mv assets_part* ./
+        shell: bash
+
       - name: Upload Part 1
         uses: cloudflare/pages-action@1
         with:
@@ -76,6 +77,15 @@ jobs:
     name: Upload Part 2
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Restore directories and assets from workspace
+        run: |
+          cat $GITHUB_WORKSPACE/directories.txt | xargs -I {} mkdir -p {}
+          mv assets_part* ./
+        shell: bash
+
       - name: Upload Part 2
         uses: cloudflare/pages-action@1
         with:
@@ -84,5 +94,3 @@ jobs:
           projectName: limtest
           directory: assets_part2
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-
-# Add more upload_part jobs for additional parts if needed
