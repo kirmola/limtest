@@ -24,8 +24,10 @@ jobs:
 
           for ((i = 1; i <= total_directories; i++)); do
             mkdir -p "assets_part$i"
-            ls -1 | head -$files_per_directory | xargs -I {} mv {} "assets_part$i/"
-            ls -1 | tail -n +$((files_per_directory + 1)) | xargs -I {} mv {} "assets_part$((i+1))"
+            files_to_move=$(ls -1 | head -$files_per_directory)
+            if [ "$files_to_move" != "" ]; then
+              echo "$files_to_move" | xargs -I {} mv {} "assets_part$i/"
+            fi
           done
 
       # Upload all parts
